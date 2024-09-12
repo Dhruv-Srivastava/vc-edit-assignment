@@ -24,11 +24,14 @@ const TranscriptEditor = ({ initialTranscript }) => {
   const totlaTranscriptDuration =
     transcript.at(-1).start_time + transcript.at(-1).duration;
 
+  const isTranscriptFinished = time >= totlaTranscriptDuration;
+
   useEffect(() => {
-    if (time >= totlaTranscriptDuration) {
+    if (isTranscriptFinished) {
+      console.log(time);
       pauseTimer();
     }
-  }, [time, pauseTimer, totlaTranscriptDuration]);
+  }, [pauseTimer, isTranscriptFinished]);
 
   const handleWordClick = (index) => {
     setCurrentWord(transcript[index].word);
@@ -103,27 +106,31 @@ const TranscriptEditor = ({ initialTranscript }) => {
           </motion.span>
         ))}
       </div>
-      <div className="flex items-center gap-10">
-        <button
-          onClick={isPlaying ? pauseTimer : startTimer}
-          className={clsx(
-            "w-fit self-start bg-green-600 text-white flex items-center gap-2 px-3 py-2 rounded-lg",
-            isPlaying && "bg-red-600"
-          )}
-        >
-          <img src={isPlaying ? PlayIcon : PauseIcon} alt="" />
-          {isPlaying ? "Pause" : "Play"}
-        </button>
-        <button
-          onClick={restartTimer}
-          className={clsx(
-            "w-fit self-start bg-blue-600 text-white flex items-center gap-2 px-3 py-2 rounded-lg"
-          )}
-        >
-          <img src={RestartIcon} alt="" />
-          Restart
-        </button>
-      </div>
+      <motion.div className="flex items-center gap-10" layout>
+        {!isTranscriptFinished && (
+          <button
+            onClick={isPlaying ? pauseTimer : startTimer}
+            className={clsx(
+              "w-fit self-start bg-green-600 text-white flex items-center gap-2 px-3 py-2 rounded-lg",
+              isPlaying && "bg-red-600"
+            )}
+          >
+            <img src={isPlaying ? PlayIcon : PauseIcon} alt="" />
+            {isPlaying ? "Pause" : "Play"}
+          </button>
+        )}
+        {time > 0 && (
+          <button
+            onClick={restartTimer}
+            className={clsx(
+              "w-fit self-start bg-blue-600 text-white flex items-center gap-2 px-3 py-2 rounded-lg"
+            )}
+          >
+            <img src={RestartIcon} alt="" />
+            Restart
+          </button>
+        )}
+      </motion.div>
       <AnimatePresence>
         {isModalOpen && (
           <Modal
