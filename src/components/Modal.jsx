@@ -4,10 +4,11 @@ import { useEffect, useState } from "react";
 import EditIcon from "../assets/edit-icon.svg";
 import CloseIcon from "../assets/close-icon.svg";
 
-const Modal = ({ onClose, onReplace, word }) => {
+const Modal = ({ onClose, onReplace, onReplaceAll, word }) => {
   const [inputValue, setInputValue] = useState(word);
   const [error, setError] = useState(null);
   const [caseSensitive, setCaseSensitive] = useState(true);
+  
 
   useEffect(function preLoadIcons() {
     const image = new Image();
@@ -15,9 +16,10 @@ const Modal = ({ onClose, onReplace, word }) => {
     image.src = CloseIcon;
   }, []);
 
-  function handleEditSubmit() {
+  function handleEditSubmit(mode) {
     if (error) return;
-    onReplace(inputValue, caseSensitive);
+    if (mode === "replace-all") onReplaceAll(inputValue, caseSensitive);
+    else onReplace(inputValue);
     onClose();
   }
 
@@ -81,13 +83,13 @@ const Modal = ({ onClose, onReplace, word }) => {
         </label>
         <div className="grid grid-cols-2 gap-3">
           <button
-            onClick={handleEditSubmit}
+            onClick={() => handleEditSubmit("replace-all")}
             className="bg-transparent border border-[#D0D5DD] text-[#344054] text-sm px-3 py-2 rounded-lg lg:text-base"
           >
             Replace All
           </button>
           <button
-            onClick={handleEditSubmit}
+            onClick={() => handleEditSubmit("replace")}
             className="bg-[#7F56D9] text-sm text-white px-3 py-2 rounded-lg lg:text-base"
           >
             Replace

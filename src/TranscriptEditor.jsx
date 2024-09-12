@@ -19,8 +19,15 @@ const TranscriptEditor = ({ initialTranscript }) => {
   const [editingIndex, setEditingIndex] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentWord, setCurrentWord] = useState("");
+  const [recentlyEditedWords, setRecentlyEditedWords] = useState([]);
 
   const { time, isPlaying, pauseTimer, startTimer, restartTimer } = useTimer();
+  const {
+    time: recentEditedTimeElapsed,
+    isPlaying: isRecentTimeElapsedPlaying,
+    startTimer: startRecentEditedTimeElapsed,
+    restartTimer: restartRecentEditedTimeElapsed,
+  } = useTimer();
 
   const { mm, ss, msms } = formatTime(time);
   const totlaTranscriptDuration =
@@ -28,12 +35,29 @@ const TranscriptEditor = ({ initialTranscript }) => {
 
   const isTranscriptFinished = time >= totlaTranscriptDuration;
 
-  useEffect(() => {
-    if (isTranscriptFinished) {
-      console.log(time);
-      pauseTimer();
-    }
-  }, [pauseTimer, isTranscriptFinished]);
+  useEffect(
+    function checkTranscriptFinish() {
+      if (isTranscriptFinished) {
+        pauseTimer();
+      }
+    },
+    [pauseTimer, isTranscriptFinished]
+  );
+
+  useEffect(
+    function checkRecentEdited() {
+      if (recentEditedTimeElapsed >= 800) {
+        setRecentlyEditedWords([]);
+        restartRecentEditedTimeElapsed();
+      }
+    },
+    [
+      recentEditedTimeElapsed,
+      isRecentTimeElapsedPlaying,
+      startRecentEditedTimeElapsed,
+      restartRecentEditedTimeElapsed,
+    ]
+  );
 
   const handleWordClick = (index) => {
     setCurrentWord(transcript[index].word);
@@ -47,35 +71,34 @@ const TranscriptEditor = ({ initialTranscript }) => {
     setEditingIndex(null);
   }
 
-  const handleReplace = (newWord, caseSensitive) => {
+  const handleReplace = (newWord) => {
     setTranscript((prev) =>
-      prev.map((item, index) =>
-        index === editingIndex
+      prev.map((item, index) => {
+        return index === editingIndex
           ? { ...item, word: newWord }
-          : caseSensitive
-          ? item
-          : {
-              ...item,
-              word: item.word.replace(new RegExp(currentWord, "gi"), newWord),
-            }
-      )
+          : { ...item };
+      })
     );
+    setRecentlyEditedWords([editingIndex]);
+    startRecentEditedTimeElapsed();
   };
 
   const handleReplaceAll = (newWord, caseSensitive) => {
-    setTranscript((prev) =>
-      prev.map((item) =>
-        caseSensitive
-          ? {
-              ...item,
-              word: item.word.replace(new RegExp(currentWord, "g"), newWord),
-            }
-          : {
-              ...item,
-              word: item.word.replace(new RegExp(currentWord, "gi"), newWord),
-            }
-      )
-    );
+    const indexEdited = [];
+    setTranscript((prev) => {
+      return prev.map((item, index) => {
+        let isMatch;
+        if (caseSensitive) isMatch = prev[editingIndex].word === item.word;
+        else
+          isMatch =
+            prev[editingIndex].word.toLowerCase() === item.word.toLowerCase();
+
+        if (isMatch) indexEdited.push(index);
+        return isMatch ? { ...item, word: newWord } : { ...item };
+      });
+    });
+    setRecentlyEditedWords(indexEdited);
+    startRecentEditedTimeElapsed();
   };
 
   return (
@@ -92,16 +115,20 @@ const TranscriptEditor = ({ initialTranscript }) => {
           <motion.span
             key={index}
             className={clsx(
-              "cursor-pointer leading-snug",
+              "cursor-pointer leading-snug transition-colors duration-300",
               time >= word.start_time &&
                 time < word.start_time + word.duration &&
                 "text-red-500",
               isTranscriptFinished &&
                 index === transcript.length - 1 &&
                 "text-red-500",
-              editingIndex === index && "bg-yellow-500 text-black"
+              recentlyEditedWords.includes(index) &&
+                "bg-yellow-500 text-black "
             )}
-            onClick={() => handleWordClick(index)}
+            onClick={() => {
+              restartRecentEditedTimeElapsed();
+              handleWordClick(index);
+            }}
             animate={{
               scale:
                 time >= word.start_time &&
