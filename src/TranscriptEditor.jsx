@@ -11,6 +11,8 @@ import Modal from "./components/Modal";
 import PlayIcon from "./assets/play.svg";
 import PauseIcon from "./assets/pause.svg";
 import RestartIcon from "./assets/restart.svg";
+import Checkmark from "./components/AnimatedSVGs/Finished";
+import LoadingSpinner from "./components/AnimatedSVGs/Loading";
 
 const TranscriptEditor = ({ initialTranscript }) => {
   const [transcript, setTranscript] = useState(initialTranscript);
@@ -78,9 +80,13 @@ const TranscriptEditor = ({ initialTranscript }) => {
 
   return (
     <div className="flex-1 flex flex-col items-center gap-6 text-white p-4 text-pretty">
-      <span className="text-gray-400 text-2xl self-start">
-        {mm} : {ss} : {msms}
-      </span>
+      <div className="self-start flex items-center gap-6">
+        <span className=" text-gray-400 text-2xl font-mono">
+          {mm} : {ss} : {msms}
+        </span>
+        {time > 0 &&
+          (isTranscriptFinished ? <Checkmark /> : <LoadingSpinner />)}
+      </div>
       <div className="flex flex-wrap gap-2 text-[clamp(1rem,5vw,1.5rem)]">
         {transcript.map((word, index) => (
           <motion.span
@@ -89,6 +95,9 @@ const TranscriptEditor = ({ initialTranscript }) => {
               "cursor-pointer leading-snug",
               time >= word.start_time &&
                 time < word.start_time + word.duration &&
+                "text-red-500",
+              isTranscriptFinished &&
+                index === transcript.length - 1 &&
                 "text-red-500",
               editingIndex === index && "bg-yellow-500 text-black"
             )}
