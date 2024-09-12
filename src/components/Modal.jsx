@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import EditIcon from "../assets/edit-icon.svg";
 import CloseIcon from "../assets/close-icon.svg";
@@ -7,6 +7,13 @@ import CloseIcon from "../assets/close-icon.svg";
 const Modal = ({ isOpen, onClose, onReplace, onReplaceAll, word }) => {
   const [inputValue, setInputValue] = useState(word);
   const [caseSensitive, setCaseSensitive] = useState(true);
+
+  useEffect(function preLoadIcons() {
+    const image = new Image();
+    image.src = EditIcon;
+    image.src = CloseIcon;
+  }, []);
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
